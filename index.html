@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King of the Hill Ratings Heatmap</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px;
+        }
+        .episode {
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+            color: #fff;
+        }
+        .episode-title {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .ratings {
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+<body>
+    <h1>King of the Hill Ratings Heatmap</h1>
+    <div id="heatmap" class="heatmap"></div>
+
+    <script>
+        // Extract API key from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const apiKey = urlParams.get("apikey");
+
+        if (!apiKey) {
+            document.body.innerHTML = "<h2>Please provide an API key in the URL as ?apikey=YOUR_API_KEY</h2>";
+            throw new Error("API key is missing");
+        }
+
+        // Your IMDb and personal ratings
+        const personalRatings = [
+            { season: 1, episode: 1, rating: 7 },
+            { season: 1, episode: 2, rating: 8 },
+            // Add more...
+        ];
+
+        const fetchEpisodeData = async (season, episode) => {
+            const response = await fetch(`http://www.omdbapi.com/?t=King+of+the+Hill&Season=${season}&Episode=${episode}&apikey=${apiKey}`);
+            return response.json();
+        };
+
+        const renderHeatmap = async () => {
+            const heatmapContainer = document.getElementById("heatmap");
+
+            for (const { season, episode, rating: myRating } of personalRatings) {
+                const data = await fetchEpisodeData(season, episode);
+                const imdbRating = data.imdbRating || "N/A";
+
+                // Create episode block
+                const episodeDiv = document.createElement("div");
+                episodeDiv.className = "episode";
+                episodeDiv.style.backgroundColor = `rgba(255, 69, 0, ${myRating / 10})`; // Dynamic color based on your rating
+
+                episodeDiv.innerHTML = `
+                    <div class="episode-title">S${season}E${episode}: ${data.Title || "Unknown"}</div>
+                    <div class="ratings">
+                        <strong>My Rating:</strong> ${myRating}<br>
+                        <strong>IMDb Rating:</strong> ${imdbRating}
+                    </div>
+                `;
+
+                heatmapContainer.appendChild(episodeDiv);
+            }
+        };
+
+        renderHeatmap();
+    </script>
+</body>
+</html>
